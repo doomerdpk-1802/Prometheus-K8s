@@ -1,0 +1,27 @@
+prometheus:
+  prometheusSpec:
+    thanos:
+      image: quay.io/thanos/thanos:v0.35.1
+      objectStorageConfig:
+        existingSecret:
+          name: thanos-objstore-secret
+          key: objstore.yml
+    externalLabels:
+      cluster: prometheus-monitoring
+      replica: prometheus-0
+  service:
+    type: NodePort
+    nodePort: 30000
+
+grafana:
+  service:
+    type: NodePort
+    nodePort: 30001
+  additionalDataSources:
+    - name: Thanos
+      type: prometheus
+      url: http://thanos-querier.thanos.svc.cluster.local:9091
+      access: proxy
+      isDefault: false
+      jsonData:
+        timeInterval: 30s

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-compactor
+  namespace: thanos
+  labels:
+    app: thanos-compactor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thanos-compactor
+  template:
+    metadata:
+      labels:
+        app: thanos-compactor
+    spec:
+      containers:
+        - name: thanos-compactor
+          image: quay.io/thanos/thanos:v0.35.1
+          args:
+            - compact
+            - --objstore.config-file=/etc/thanos/objstore.yml
+            - --data-dir=/data
+            - --wait
+          ports:
+            - name: http
+              containerPort: 10902
+          volumeMounts:
+            - name: objstore-config
+              mountPath: /etc/thanos
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: objstore-config
+          secret:
+            secretName: thanos-objstore-secret
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-compactor
+  namespace: thanos
+  labels:
+    app: thanos-compactor
+spec:
+  selector:
+    app: thanos-compactor
+  ports:
+    - name: http
+      port: 10902
+      targetPort: 10902
