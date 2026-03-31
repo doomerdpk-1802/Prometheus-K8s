@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-app
+  namespace: monitoring
+  labels:
+    app: node-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+        - name: node-app
+          image: doomerdpk/prom-node:latest
+          ports:
+            - name: metrics
+              containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-app
+  namespace: monitoring
+  labels:
+    app: node-app
+    release: prometheus-stack
+spec:
+  selector:
+    app: node-app
+  ports:
+    - name: metrics
+      port: 3000
+      targetPort: 3000
